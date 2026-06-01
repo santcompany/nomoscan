@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nomoscan — Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fafaf9; --surface:#fff; --sunk:#f1f0ed; --ink:#0a0a0a; --soft:#3a3a3a;
+  --muted:#757575; --faded:#bdbdbd; --border:#e4e3df; --border-strong:#c8c6c0;
+  --wa-bg:#e7ded4; --wa-in:#fff; --pos:#1f6b3a;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Geist',system-ui,sans-serif;background:transparent;color:var(--ink);
+  margin:0;display:flex;align-items:center;justify-content:center;-webkit-font-smoothing:antialiased;}
+.stage{width:100%;aspect-ratio:16/9;background:var(--bg);border-radius:16px;
+  border:1px solid var(--border);overflow:hidden;box-shadow:0 40px 90px -50px rgba(0,0,0,.55);
+  position:relative;display:flex;}
+.sb{width:212px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;padding:18px 0;}
+.sb__brand{font-family:'Instrument Serif',serif;font-size:22px;padding:0 20px 2px;}
+.sb__org{font-size:11px;color:var(--muted);padding:0 20px;}
+.sb__plan{margin:9px 20px 12px;display:inline-block;align-self:flex-start;font-size:10px;
+  border:1px solid var(--border);border-radius:999px;padding:3px 10px;color:var(--soft);}
+.nav{display:flex;align-items:center;gap:11px;padding:8px 20px;font-size:12.5px;color:var(--soft);
+  position:relative;transition:background .25s,color .25s;}
+.nav svg{width:16px;height:16px;stroke:var(--muted);fill:none;flex-shrink:0;}
+.nav.active{color:#fff;background:var(--ink);font-weight:500;margin:0 10px;border-radius:9px;padding:8px 12px;}
+.nav.active svg{stroke:#fff;}
+.sb__user{margin-top:auto;display:flex;align-items:center;gap:10px;padding:14px 20px 0;border-top:1px solid var(--border);}
+.sb__avatar{width:32px;height:32px;border-radius:999px;background:var(--ink);color:#fff;font-size:12px;
+  font-weight:600;display:flex;align-items:center;justify-content:center;}
+.sb__user b{font-size:12px;display:block;}.sb__user span{font-size:11px;color:var(--muted);}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;padding:26px 30px;overflow:hidden;position:relative;}
+.screen{position:absolute;inset:0;padding:26px 30px;opacity:0;transform:translateX(14px);
+  transition:opacity .5s ease,transform .5s ease;pointer-events:none;}
+.screen.on{opacity:1;transform:none;}
+.h1{font-family:'Instrument Serif',serif;font-size:30px;font-weight:400;letter-spacing:-.01em;}
+.sub{font-size:13px;color:var(--muted);margin-top:3px;margin-bottom:20px;}
+.hero{background:var(--ink);color:#fff;border-radius:16px;padding:22px;width:56%;position:relative;overflow:hidden;}
+.hero__top{display:flex;align-items:center;justify-content:space-between;font-size:13px;color:#fff;margin-bottom:16px;}
+.hero__spark{width:18px;height:18px;stroke:#fff;fill:none;opacity:.7;}
+.hero__num{font-family:'Instrument Serif',serif;font-size:46px;line-height:.9;}
+.hero__num span{font-size:14px;color:#9a9a96;font-family:'Geist';}
+.hero__est{font-size:11px;color:#888;margin-top:6px;}
+.hero__list{margin-top:18px;border-top:1px solid rgba(255,255,255,.14);padding-top:14px;display:flex;flex-direction:column;gap:11px;}
+.hero__row{display:flex;align-items:center;gap:11px;font-size:13px;}
+.hero__row svg{width:15px;height:15px;stroke:#bdbdbd;fill:none;}
+.hero__row .v{margin-left:auto;font-family:'Instrument Serif',serif;font-size:18px;}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:20px;}
+.day{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 8px;min-height:78px;}
+.day b{font-size:11px;color:var(--muted);font-family:'Geist Mono';display:block;}
+.day .dn{font-size:15px;font-weight:600;float:right;}
+.day .ev{margin-top:8px;background:var(--sunk);border-radius:6px;padding:5px 6px;font-size:9px;line-height:1.2;
+  opacity:0;transform:scale(.9);transition:all .5s cubic-bezier(.34,1.4,.5,1);}
+.day .ev.show{opacity:1;transform:none;}
+.day .ev b{color:var(--ink);font-family:'Geist';font-size:9.5px;float:none;}
+.day .ev span{color:var(--muted);}
+.prazo{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;
+  opacity:0;transform:translateY(-10px);transition:all .6s cubic-bezier(.34,1.4,.5,1);}
+.prazo.show{opacity:1;transform:none;}
+.prazo.fresh{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink) inset;}
+.prazo__tags{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
+.tag{font-size:10px;border:1px solid var(--border);border-radius:999px;padding:3px 9px;color:var(--soft);font-family:'Geist Mono';}
+.tag.ok{background:#eaf5ee;border-color:#bfe0cb;color:var(--pos);}
+.prazo__proc{font-family:'Geist Mono';font-size:12px;color:var(--soft);margin-bottom:8px;}
+.prazo__desc{font-size:13px;line-height:1.5;color:var(--soft);}
+.ptable{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.ptable__head,.prow{display:grid;grid-template-columns:1.7fr .7fr 1fr .4fr;gap:10px;padding:13px 18px;align-items:center;}
+.ptable__head{border-bottom:1px solid var(--border);font-size:11px;color:var(--muted);font-weight:500;}
+.prow{border-bottom:1px solid var(--sunk);font-size:12.5px;}
+.prow:last-child{border-bottom:none;}
+.prow .cnj{font-family:'Geist Mono';font-size:12px;color:var(--soft);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.prow .muted{color:var(--faded);}
+.movtag{font-size:9px;background:var(--ink);color:#fff;border-radius:999px;padding:2px 8px;display:inline-flex;align-items:center;gap:4px;
+  opacity:0;transform:scale(.8);transition:all .5s cubic-bezier(.34,1.4,.5,1);}
+.movtag.show{opacity:1;transform:none;}
+.movtag svg{width:9px;height:9px;stroke:#fff;fill:none;}
+.pdetail{margin-top:14px;background:var(--sunk);border-radius:12px;padding:14px 16px;font-size:12.5px;color:var(--soft);
+  display:flex;align-items:flex-start;gap:10px;opacity:0;transform:translateY(8px);transition:all .5s;}
+.pdetail.show{opacity:1;transform:none;}
+.pdetail svg{width:16px;height:16px;stroke:var(--pos);fill:none;flex-shrink:0;margin-top:1px;}
+.pdetail b{color:var(--ink);}
+.conv{display:grid;grid-template-columns:240px 1fr;height:calc(100% - 56px);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;background:var(--surface);}
+.clist{border-right:1px solid var(--border);overflow:hidden;}
+.csearch{padding:12px 14px;border-bottom:1px solid var(--border);font-size:11px;color:var(--faded);}
+.citem{padding:11px 14px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;}
+.citem.active{background:var(--sunk);}
+.citem .av{width:30px;height:30px;border-radius:999px;background:var(--ink);color:#fff;font-size:10px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:600;}
+.citem .nm{font-size:12px;font-weight:500;}.citem .pv{font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px;}
+.cthread{display:flex;flex-direction:column;background:var(--wa-bg);min-width:0;}
+.cttop{padding:11px 16px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.cttop .av{width:28px;height:28px;border-radius:999px;background:var(--ink);color:#fff;font-size:10px;
+  display:flex;align-items:center;justify-content:center;font-weight:600;}
+.cttop b{font-size:12.5px;}.cttop span{font-size:10px;color:var(--pos);display:block;}
+.bubbles{flex:1;padding:18px;display:flex;flex-direction:column;gap:10px;overflow:hidden;justify-content:flex-end;}
+.bub{max-width:76%;padding:9px 12px;border-radius:12px;font-size:12px;line-height:1.45;opacity:0;
+  transform:translateY(8px);transition:opacity .4s,transform .4s;}
+.bub.show{opacity:1;transform:none;}
+.bub.in{background:var(--wa-in);border-top-left-radius:3px;align-self:flex-start;}
+.bub.out{background:var(--ink);color:#fff;border-top-right-radius:3px;align-self:flex-end;}
+.bub small{display:block;font-size:9px;color:var(--faded);margin-top:4px;text-align:right;}
+.bub.out small{color:#888;}
+.bub .who{font-size:9px;color:var(--pos);font-weight:600;margin-bottom:3px;}
+.typing{align-self:flex-start;background:var(--wa-in);border-radius:12px;border-top-left-radius:3px;
+  padding:10px 13px;display:flex;gap:4px;opacity:0;transition:opacity .3s;}
+.typing.show{opacity:1;}
+.typing i{width:6px;height:6px;border-radius:999px;background:var(--faded);animation:blink 1.2s infinite;}
+.typing i:nth-child(2){animation-delay:.2s;}.typing i:nth-child(3){animation-delay:.4s;}
+@keyframes blink{0%,80%,100%{opacity:.25;}40%{opacity:1;}}
+.ghost{position:absolute;width:22px;height:22px;z-index:50;pointer-events:none;left:560px;top:300px;
+  transition:left 1s cubic-bezier(.5,0,.2,1),top 1s cubic-bezier(.5,0,.2,1);filter:drop-shadow(0 2px 3px rgba(0,0,0,.3));}
+.ghost svg{width:100%;height:100%;}
+.ghost.click{animation:gclick .4s ease;}@keyframes gclick{50%{transform:scale(.82);}}
+.toast{position:absolute;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);
+  color:#fff;font-size:12.5px;padding:10px 18px;border-radius:999px;opacity:0;
+  transition:opacity .4s,transform .4s;z-index:60;display:flex;align-items:center;gap:9px;white-space:nowrap;font-weight:500;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast svg{width:15px;height:15px;stroke:#fff;fill:none;}
+.controls{display:flex;gap:10px;}
+.ctrl{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:999px;border:1px solid var(--border-strong);
+  background:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:'Geist';}
+.ctrl:hover{background:var(--sunk);}.ctrl svg{width:14px;height:14px;fill:none;}
+.hint{font-size:12px;color:#8a8a86;max-width:600px;text-align:center;line-height:1.5;}
+
+@media (max-width:620px){
+  body{display:block;}
+  .scaler{width:100%;overflow:hidden;position:relative;}
+  .stage{width:920px;transform-origin:top left;}
+}
+</style>
+</head>
+<body>
+<div class="scaler" id="scaler">
+<div class="stage" id="stage">
+  <aside class="sb">
+    <div class="sb__brand">Nomoscan</div>
+    <div class="sb__org">Tessaro Advogados</div>
+    <span class="sb__plan">Plano Estratégico</span>
+    <div class="nav active" data-nav="dash">
+      <svg viewBox="0 0 24 24" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</div>
+    <div class="nav" data-nav="prazos">
+      <svg viewBox="0 0 24 24" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Prazos</div>
+    <div class="nav" data-nav="proc">
+      <svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Processos</div>
+    <div class="nav" data-nav="conv">
+      <svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>Conversas</div>
+    <div class="nav" data-nav="esc">
+      <svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>Escalações</div>
+    <div class="nav" data-nav="cli">
+      <svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Clientes</div>
+    <div class="nav" data-nav="mkt">
+      <svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>Marketing</div>
+    <div class="nav" data-nav="cfg">
+      <svg viewBox="0 0 24 24" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Configurações</div>
+    <div class="sb__user">
+      <div class="sb__avatar">GT</div>
+      <div><b>Guilherme Tessaro</b><span>Advogado</span></div>
+    </div>
+  </aside>
+  <div class="main">
+    <section class="screen on" id="scrDash">
+      <div class="h1">Boa noite, Dr. Guilherme.</div>
+      <div class="sub">Você tem 3 reuniões hoje e 2 mensagens aguardando no WhatsApp.</div>
+      <div class="hero">
+        <div class="hero__top"><span>A Lara trabalhou por você</span>
+          <svg class="hero__spark" viewBox="0 0 24 24" stroke-width="1.8"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8"/></svg></div>
+        <div class="hero__num"><span id="heroN">38</span> <span>tarefas neste mês</span></div>
+        <div class="hero__est">≈ 20 horas poupadas por semana · estimativa</div>
+        <div class="hero__list">
+          <div class="hero__row"><svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Mensagens respondidas pela Lara<span class="v" id="cMsg">214</span></div>
+          <div class="hero__row"><svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Intimações classificadas<span class="v" id="cInt">17</span></div>
+          <div class="hero__row"><svg viewBox="0 0 24 24" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Prazos criados<span class="v" id="cPz">9</span></div>
+        </div>
+      </div>
+    </section>
+    <section class="screen" id="scrPrazos">
+      <div class="h1">Prazos</div>
+      <div class="sub" id="prazoSub">14 prazos no escritório</div>
+      <div class="week">
+        <div class="day"><b>DOM</b><span class="dn">31</span></div>
+        <div class="day"><b>SEG</b><span class="dn">01</span><div class="ev show" style="background:#fbeaea;"><b>contestação</b><br><span>0000333…</span></div></div>
+        <div class="day"><b>TER</b><span class="dn">02</span><div class="ev" id="evDay"><b>manifestação</b><br><span>0000000…</span></div><div class="ev show" style="margin-top:5px;"><b>réplica</b><br><span>0000444…</span></div></div>
+        <div class="day"><b>QUA</b><span class="dn">03</span><div class="ev show"><b>recurso</b><br><span>0000555…</span></div></div>
+        <div class="day"><b>QUI</b><span class="dn">04</span></div>
+        <div class="day"><b>SEX</b><span class="dn">05</span><div class="ev show"><b>alegações</b><br><span>0000666…</span></div><div class="ev show" style="margin-top:5px;background:#fbeaea;"><b>embargos</b><br><span>0000777…</span></div></div>
+        <div class="day"><b>SÁB</b><span class="dn">06</span></div>
+      </div>
+      <div class="prazo" id="prazoCard">
+        <div class="prazo__tags"><span class="tag">despacho</span><span class="tag">Prazo 5d</span><span class="tag ok">✓ Agendado</span><span class="tag" style="border:none;color:var(--faded)">Disp. 26/05/2026</span></div>
+        <div class="prazo__proc">Processo: 0000000-00.0000.0.00.0000</div>
+        <div class="prazo__desc">Analisar os documentos juntados pelo autor em impugnação e apresentar manifestação em até 5 dias úteis (prazo final: 02/06/2026).</div>
+      </div>
+    </section>
+    <section class="screen" id="scrProc">
+      <div class="h1">Processos</div>
+      <div class="sub">15 processos no escritório</div>
+      <div class="ptable" id="ptable">
+        <div class="ptable__head"><span>Número do processo</span><span>Tribunal</span><span>Cliente</span><span style="text-align:right">Partes</span></div>
+        <div class="prow"><span class="cnj">0000000-00.0000.0.00.0000 <span class="movtag" id="movTag"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Nova movimentação</span></span><span>TRT24</span><span id="procCli">Roberto F. da Silva</span><span style="text-align:right">2</span></div>
+        <div class="prow"><span class="cnj">0000111-00.0000.0.00.0000</span><span>TRT24</span><span>Construtora Aurora Ltda.</span><span style="text-align:right">4</span></div>
+        <div class="prow"><span class="cnj">0000222-00.0000.0.00.0000</span><span>TJMS</span><span>Maria Aparecida Gomes</span><span style="text-align:right">2</span></div>
+        <div class="prow"><span class="cnj">0000333-00.0000.0.00.0000</span><span>TJMS</span><span>Transportes Pantanal S.A.</span><span style="text-align:right">3</span></div>
+        <div class="prow"><span class="cnj">0000444-00.0000.0.00.0000</span><span>TRT24</span><span>José Carlos de Oliveira</span><span style="text-align:right">2</span></div>
+        <div class="prow"><span class="cnj">0000555-00.0000.0.00.0000</span><span>TJMS</span><span>Auto Posto Cidade Verde</span><span style="text-align:right">2</span></div>
+        <div class="prow"><span class="cnj">0000666-00.0000.0.00.0000</span><span>TRF3</span><span>Antônio Marques Filho</span><span style="text-align:right">5</span></div>
+      </div>
+      <div style="text-align:center;font-size:11px;color:var(--faded);margin-top:10px;">+ 8 outros processos</div>
+      <div class="pdetail" id="procDetail">
+        <svg viewBox="0 0 24 24" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        <div>A Lara vinculou o novo prazo de <b>manifestação (02/06)</b> ao processo <b>0000000-00.0000.0.00.0000</b> — sozinha, assim que a intimação chegou.</div>
+      </div>
+    </section>
+    <section class="screen" id="scrConv">
+      <div class="h1">Conversas</div>
+      <div class="sub">34 conversas no escritório</div>
+      <div class="conv">
+        <div class="clist">
+          <div class="csearch">Buscar por nome ou telefone…</div>
+          <div class="citem active"><div class="av">RS</div><div><div class="nm">Roberto F. da Silva</div><div class="pv">online agora</div></div></div>
+          <div class="citem"><div class="av">JB</div><div><div class="nm">João Batista</div><div class="pv">Obrigado, doutor!</div></div></div>
+          <div class="citem"><div class="av">AP</div><div><div class="nm">Ana Paula Souza</div><div class="pv">Perfeito, aguardo o retorno</div></div></div>
+          <div class="citem"><div class="av">MG</div><div><div class="nm">Maria A. Gomes</div><div class="pv">A audiência foi remarcada?</div></div></div>
+          <div class="citem"><div class="av">CV</div><div><div class="nm">Cidade Verde</div><div class="pv">Recebido, muito obrigado</div></div></div>
+          <div class="citem"><div class="av">JC</div><div><div class="nm">José C. Oliveira</div><div class="pv">Quando sai a sentença?</div></div></div>
+          <div class="citem"><div class="av">AM</div><div><div class="nm">Antônio Marques</div><div class="pv">Lead sem cadastro</div></div></div>
+          <div class="citem"><div class="av">CL</div><div><div class="nm">Carla Lima</div><div class="pv">Lead sem cadastro</div></div></div>
+        </div>
+        <div class="cthread">
+          <div class="cttop"><div class="av">RS</div><div><b>Roberto F. da Silva</b><span>online agora</span></div></div>
+          <div class="bubbles" id="bubbles"><div class="typing" id="typing"><i></i><i></i><i></i></div></div>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div class="ghost" id="ghost"><svg viewBox="0 0 24 24" fill="#0a0a0a" stroke="#fff" stroke-width="1.2"><path d="M3 2l7 18 2.5-7L20 10z"/></svg></div>
+  <div class="toast" id="toast"><svg viewBox="0 0 24 24" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><span id="toastTxt"></span></div>
+</div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const ghost=$('#ghost'),toast=$('#toast'),toastTxt=$('#toastTxt');
+let timers=[],playing=false;
+function at(ms,fn){timers.push(setTimeout(fn,ms));}
+function clearAll(){timers.forEach(clearTimeout);timers=[];}
+function moveG(x,y){ghost.style.left=x+'px';ghost.style.top=y+'px';}
+function moveToNav(navKey){
+  // mira no centro REAL do item da sidebar, relativo ao .stage
+  const stage=document.getElementById('stage');
+  const item=document.querySelector('.nav[data-nav="'+navKey+'"]');
+  if(!stage||!item)return;
+  const s=stage.getBoundingClientRect();
+  const r=item.getBoundingClientRect();
+  const x=r.left - s.left + r.width*0.5;
+  const y=r.top - s.top + r.height*0.5;
+  ghost.style.left=x+'px';ghost.style.top=y+'px';
+}
+function clickG(){ghost.classList.add('click');setTimeout(()=>ghost.classList.remove('click'),400);}
+function showT(t){toastTxt.textContent=t;toast.classList.add('show');}
+function hideT(){toast.classList.remove('show');}
+function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(id).classList.add('on');}
+function nav(k){document.querySelectorAll('.nav').forEach(n=>n.classList.remove('active'));document.querySelector('.nav[data-nav="'+k+'"]').classList.add('active');}
+function reset(){
+  clearAll();go('#scrDash');nav('dash');
+  $('#heroN').textContent='38';$('#cMsg').textContent='214';$('#cInt').textContent='17';$('#cPz').textContent='9';
+  $('#evDay').classList.remove('show');$('#prazoCard').classList.remove('show','fresh');
+  $('#prazoSub').textContent='14 prazos no escritório';
+  $('#movTag').classList.remove('show');$('#procDetail').classList.remove('show');
+  $('#bubbles').querySelectorAll('.bub').forEach(b=>b.remove());$('#typing').classList.remove('show');
+  hideT();moveG(560,300);
+}
+function addBub(cls,html,d){at(d,()=>{const b=document.createElement('div');b.className='bub '+cls;b.innerHTML=html;
+  $('#bubbles').insertBefore(b,$('#typing'));requestAnimationFrame(()=>requestAnimationFrame(()=>b.classList.add('show')));});}
+function play(){
+  reset();playing=true;var _b=$('#btnPlayTxt'); if(_b)_b.textContent='Tocando…';
+  at(1200,()=>showT('A Lara trabalha enquanto você advoga'));
+  at(3200,hideT);
+  at(3800,()=>showT('Nova publicação capturada'));
+  at(4200,()=>{$('#heroN').textContent='39';$('#cInt').textContent='18';});
+  at(5000,()=>moveToNav('prazos'));
+  at(5900,clickG);
+  at(6200,()=>{go('#scrPrazos');nav('prazos');hideT();});
+  at(7000,()=>{$('#prazoCard').classList.add('show','fresh');$('#prazoSub').textContent='15 prazos no escritório';});
+  at(7400,()=>showT('A Lara leu, calculou o prazo e agendou'));
+  at(8000,()=>$('#evDay').classList.add('show'));
+  at(10600,hideT);
+  at(11200,()=>moveToNav('proc'));
+  at(12100,clickG);
+  at(12400,()=>{go('#scrProc');nav('proc');hideT();});
+  at(13200,()=>$('#movTag').classList.add('show'));
+  at(13600,()=>showT('Ela vinculou o prazo ao processo certo'));
+  at(14400,()=>$('#procDetail').classList.add('show'));
+  at(17400,hideT);
+  at(18000,()=>moveToNav('conv'));
+  at(18900,clickG);
+  at(19200,()=>{go('#scrConv');nav('conv');hideT();});
+  addBub('in','Boa noite! Aqui é o Roberto Ferreira da Silva. Gostaria de saber como está o meu processo.<small>20:14</small>',19900);
+  at(20500,()=>showT('O cliente se identifica pelo nome'));
+  at(22000,hideT);
+  at(22400,()=>$('#typing').classList.add('show'));
+  at(24400,()=>$('#typing').classList.remove('show'));
+  addBub('out','<div class="who">Lara · secretária</div>Olá, Sr. Roberto! Localizei seu processo. É uma Ação Trabalhista (Horas Extras), na Vara do Trabalho de Aquidauana.<br><br>A última movimentação (25/05) foi a distribuição do recurso para a 2ª Turma do TRT24 — está em segunda instância, aguardando análise do desembargador. 🙂<small>20:14</small>',24600);
+  at(25400,()=>showT('A Lara achou o processo pelo nome e explicou'));
+  at(27800,hideT);
+  at(29000,()=>{if(playing)play();});
+}
+function stop(){playing=false;clearAll();var _b=$('#btnPlayTxt'); if(_b)_b.textContent='Reproduzir';}
+// arranque seguro: só toca depois que tudo carregou dentro do iframe
+function arrancar(){ try{ reset(); play(); }catch(e){ console.error(e); } }
+if(document.readyState==='complete'){ arrancar(); }
+else { window.addEventListener('load', arrancar); }
+</script>
+
+<script>
+(function(){
+  function ajustarEscala(){
+    var scaler=document.getElementById('scaler');
+    var stage=document.querySelector('.stage');
+    if(!scaler||!stage)return;
+    var disp=scaler.clientWidth;
+    if(disp<620){
+      var base=920;
+      var s=disp/base;
+      stage.style.width=base+'px';
+      stage.style.transform='scale('+s+')';
+      // mede a altura real renderizada do stage e aplica ao scaler
+      var h=stage.getBoundingClientRect().height;
+      scaler.style.height=h+'px';
+    }else{
+      stage.style.transform='';
+      scaler.style.height='';
+    }
+  }
+  window.addEventListener('resize',ajustarEscala);
+  window.addEventListener('load',ajustarEscala);
+  ajustarEscala();
+})();
+</script>
+</body>
+</html>
