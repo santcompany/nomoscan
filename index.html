@@ -1,0 +1,2256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nomoscan — A secretária do seu escritório. Em IA.</title>
+<meta name="description" content="A Lara atende clientes no WhatsApp 24h, transforma publicação em prazo na sua agenda, remarca reuniões e avisa o cliente sozinha, e te mostra a equipe inteira evoluindo. Seu escritório no piloto automático — e você ainda no comando.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ================================================================
+   PALETA — MONO (preto + branco + cinzas)
+   ================================================================ */
+:root {
+  --bg: #fafaf9;
+  --bg-soft: #f1f0ed;
+  --surface: #ffffff;
+  --surface-sunk: #f1f0ed;
+  --ink: #0a0a0a;
+  --ink-soft: #3a3a3a;
+  --ink-muted: #757575;
+  --ink-faded: #bdbdbd;
+  --border: #e4e3df;
+  --border-strong: #c8c6c0;
+
+  /* --- Verde musgo: cor de marca (matiz ~155°, igual ao painel) --- */
+  --musgo-900: #14271C;
+  --musgo-700: #1F3A2A;
+  --musgo-500: #3D7355;
+  --salvia-300: #8FBF9F;
+  --creme: #F4F1E8;
+
+  --positive: #3D7355;
+  --whatsapp-green: #25d366;
+  --whatsapp-bg: #efe7dd;
+  --whatsapp-out: #d9fdd3;
+  --grain: 0.025;
+}
+
+/* ================================================================
+   RESET + BASE
+   ================================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  font-family: 'Geist', system-ui, sans-serif;
+  font-weight: 400;
+  color: var(--ink);
+  background: var(--bg);
+  min-height: 100vh;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'cv11', 'ss03';
+  overflow-x: hidden;
+}
+img, svg { display: block; max-width: 100%; }
+button { font: inherit; cursor: pointer; background: none; border: none; color: inherit; }
+a { color: inherit; text-decoration: none; }
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: var(--grain);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.4 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ================================================================
+   NAV / HEADER
+   ================================================================ */
+.nav {
+  position: relative; z-index: 10;
+  padding: 28px 5vw 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 24px;
+  max-width: 1380px;
+  margin: 0 auto;
+}
+.brand {
+  font-family: 'Instrument Serif', serif;
+  font-size: 30px;
+  letter-spacing: -0.012em;
+  line-height: 1;
+  display: flex; align-items: baseline; gap: 6px;
+}
+.brand__dot {
+  width: 7px; height: 7px; border-radius: 999px;
+  background: var(--ink);
+  display: inline-block;
+  margin-bottom: 4px;
+}
+.nav__links {
+  display: flex; gap: 32px;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+.nav__links a { transition: color 0.15s ease; position: relative; }
+.nav__links a::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: -4px;
+  height: 1px;
+  background: var(--ink);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s ease;
+}
+.nav__links a:hover::after { transform: scaleX(1); }
+.nav__cta { display: flex; gap: 10px; align-items: center; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 11px 20px;
+  font-size: 13.5px;
+  font-weight: 500;
+  border-radius: 999px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--bg);
+  transition: transform 0.15s ease, box-shadow 0.25s ease, background 0.2s ease;
+  white-space: nowrap;
+  letter-spacing: -0.005em;
+}
+.btn:hover { transform: translateY(-1px); box-shadow: 0 8px 20px -8px rgba(0,0,0,0.25); }
+
+/* ===== CTA centralizado minimalista (leve) ===== */
+.cta-band {
+  max-width: 620px;
+  margin: 72px auto;
+  text-align: center;
+  padding: 0 20px;
+}
+.cta-band__text { margin-bottom: 22px; }
+.cta-band__title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 30px;
+  line-height: 1.15;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+.cta-band__title em { font-style: italic; }
+.cta-band__sub {
+  font-size: 14px;
+  color: var(--ink-muted);
+  margin-top: 8px;
+  line-height: 1.45;
+}
+.cta-band .btn {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
+}
+.cta-band .btn--ghost {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--border-strong);
+}
+.cta-band .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 20px -8px rgba(0,0,0,0.25); }
+.cta-band .btn--ghost:hover { background: var(--surface); color: var(--ink); border-color: var(--ink); }
+@media (max-width: 640px) {
+  .cta-band { margin: 40px auto; }
+  .cta-band__title { font-size: 25px; }
+}
+
+/* ===== VITRINE (player + mini-cards) ===== */
+.vitrine { max-width: 920px; margin: 0 auto; }
+.vitrine__stage {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 40px 90px -50px rgba(0,0,0,.45);
+}
+.vitrine__bar {
+  display: flex; align-items: center; gap: 7px;
+  padding: 11px 16px;
+  background: var(--bg-soft);
+  border-bottom: 1px solid var(--border);
+}
+.vitrine__dot { width: 10px; height: 10px; border-radius: 999px; background: var(--border-strong); }
+.vitrine__url { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--ink-faded); margin-left: 10px; transition: opacity .2s; }
+.vitrine__screen { position: relative; width: 100%; aspect-ratio: 16/9; background: var(--bg); }
+@media (max-width: 600px) { .vitrine__screen { aspect-ratio: 4/5; } }
+.vitrine__iframe {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  border: 0; opacity: 0; pointer-events: none;
+  transition: opacity .35s ease;
+}
+.vitrine__iframe.active { opacity: 1; pointer-events: auto; }
+.vitrine__cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 14px;
+}
+.vitrine__card {
+  text-align: left;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  font-family: 'Geist', sans-serif;
+  transition: border-color .2s, transform .15s, box-shadow .25s;
+}
+.vitrine__card:hover { transform: translateY(-2px); box-shadow: 0 12px 28px -16px rgba(0,0,0,.25); }
+.vitrine__card.active { border: 2px solid var(--ink); padding: 15px 17px; }
+.vitrine__card-top { display: flex; align-items: center; gap: 9px; }
+.vitrine__card-top svg { width: 19px; height: 19px; stroke: var(--ink-soft); fill: none; }
+.vitrine__card-top b { font-size: 14px; }
+.vitrine__card-sub { font-size: 12px; color: var(--ink-muted); margin-top: 5px; line-height: 1.4; }
+@media (max-width: 640px) {
+  .vitrine__cards { grid-template-columns: 1fr; }
+}
+.btn--ghost {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--border-strong);
+}
+.btn--ghost:hover { background: var(--surface); border-color: var(--ink); }
+.btn--sm { padding: 8px 14px; font-size: 12.5px; }
+
+@media (max-width: 880px) { .nav__links { display: none; } }
+@media (max-width: 420px) {
+  .nav__cta a[href="#login"] { display: none; }
+  .nav__cta .btn--sm { padding: 8px 12px; font-size: 12px; }
+}
+
+/* ================================================================
+   HERO
+   ================================================================ */
+.hero {
+  position: relative; z-index: 2;
+  padding: 48px 5vw 96px;
+  max-width: 1380px;
+  margin: 0 auto;
+}
+.hero__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 64px;
+  align-items: center;
+}
+@media (max-width: 1000px) {
+  .hero__grid { grid-template-columns: 1fr; gap: 56px; }
+}
+
+.hero__social {
+  display: inline-flex; align-items: center; gap: 12px;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  margin-bottom: 24px;
+  padding: 6px 14px 6px 8px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.hero__stars { color: var(--ink); letter-spacing: 1px; font-size: 11px; }
+.hero__avatars { display: flex; margin-right: 4px; }
+.hero__avatars span {
+  width: 22px; height: 22px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--bg);
+  border: 2px solid var(--surface);
+  font-size: 9px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  margin-left: -8px;
+}
+.hero__avatars span:first-child { margin-left: 0; }
+.hero__avatars span:nth-child(2) { background: var(--ink-soft); }
+.hero__avatars span:nth-child(3) { background: var(--ink-muted); }
+
+.hero__headline {
+  font-family: 'Instrument Serif', serif;
+  font-weight: 400;
+  font-size: clamp(46px, 6.4vw, 86px);
+  line-height: 0.98;
+  letter-spacing: -0.022em;
+  color: var(--ink);
+  margin-bottom: 26px;
+}
+.hero__headline em {
+  font-style: italic;
+  position: relative;
+  display: inline-block;
+}
+.hero__headline em::after {
+  content: '';
+  position: absolute;
+  left: -4px; right: -4px; bottom: -2px;
+  height: 14px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 14' preserveAspectRatio='none'%3E%3Cpath d='M2 9 Q 50 1, 100 6 T 198 8' stroke='%230a0a0a' stroke-width='2.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  pointer-events: none;
+}
+
+.hero__sub {
+  font-size: 18.5px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  max-width: 540px;
+  margin-bottom: 36px;
+}
+.hero__sub-hl {
+  font-style: italic;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.hero__cta { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
+
+.hero__hint {
+  font-size: 12.5px;
+  color: var(--ink-muted);
+  display: flex; gap: 22px;
+  flex-wrap: wrap;
+}
+.hero__hint span { display: inline-flex; align-items: center; gap: 6px; }
+.hero__hint svg { color: var(--ink); }
+
+/* === HERO VISUAL: HUB com Lara no centro === */
+.hub-wrap {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+}
+.hub-bg {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  border: 1px dashed var(--border-strong);
+  opacity: 0.55;
+}
+.hub-bg::before {
+  content: '';
+  position: absolute;
+  inset: 12%;
+  border-radius: 50%;
+  border: 1px dashed var(--border-strong);
+}
+
+.hub-center {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 180px;
+  background: var(--ink);
+  color: var(--bg);
+  border-radius: 50%;
+  aspect-ratio: 1 / 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center;
+  padding: 24px;
+  box-shadow: 0 20px 60px -20px rgba(0,0,0,0.35);
+  z-index: 4;
+}
+.hub-center__avatar {
+  width: 44px; height: 44px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.12);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 10px;
+  font-family: 'Instrument Serif', serif;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.hub-center__name {
+  font-family: 'Instrument Serif', serif;
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: -0.012em;
+  margin-bottom: 2px;
+}
+.hub-center__role {
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faded);
+}
+.hub-center__pulse {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 1px solid var(--ink);
+  opacity: 0;
+  animation: pulse 2.8s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.4; }
+  100% { transform: scale(1.15); opacity: 0; }
+}
+
+.hub-node {
+  position: absolute;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.02), 0 10px 30px -18px rgba(0,0,0,0.15);
+  display: flex; align-items: center; gap: 12px;
+  min-width: 200px;
+  z-index: 3;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.hub-node:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.02), 0 16px 40px -18px rgba(0,0,0,0.22);
+}
+.hub-node__icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: var(--bg-soft);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  color: var(--ink);
+}
+.hub-node__body { min-width: 0; }
+.hub-node__title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 17px;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+.hub-node__sub {
+  font-size: 11px;
+  color: var(--ink-muted);
+  margin-top: 1px;
+}
+
+.hub-node--cliente-novo { top: 4%; left: 6%; }
+.hub-node--cliente-antigo { top: 4%; right: 6%; }
+.hub-node--advogado { bottom: 18%; left: -2%; }
+.hub-node--processos { bottom: 18%; right: -2%; }
+
+/* Linhas conectoras (SVG sobreposto) */
+.hub-lines {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+.hub-lines path {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+  fill: none;
+  opacity: 0.7;
+}
+
+@media (max-width: 1000px) {
+  .hub-wrap { max-width: 480px; }
+  .hub-center { width: 150px; }
+  .hub-node { min-width: 170px; padding: 12px 14px; }
+  .hub-node__title { font-size: 15px; }
+}
+@media (max-width: 540px) {
+  .hub-node { min-width: 0; width: 45%; padding: 9px 10px; border-radius: 11px; gap: 7px; }
+  .hub-node__icon { width: 26px; height: 26px; flex-shrink: 0; }
+  .hub-node__title { font-size: 11.5px; }
+  .hub-node__sub { font-size: 9.5px; }
+  .hub-node--cliente-novo { left: 0; top: 4%; }
+  .hub-node--cliente-antigo { right: 0; top: 4%; }
+  .hub-node--advogado { left: 0; bottom: 4%; }
+  .hub-node--processos { right: 0; bottom: 4%; }
+  .hub-center { width: 124px; }
+  .hub-center__name { font-size: 17px; }
+}
+
+/* ================================================================
+   SECTION COMMONS
+   ================================================================ */
+.section {
+  position: relative; z-index: 2;
+  padding: 64px 5vw;
+  max-width: 1380px;
+  margin: 0 auto;
+}
+.section-header { text-align: center; margin-bottom: 64px; }
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  font-weight: 500;
+  margin-bottom: 18px;
+  display: inline-flex; align-items: center; gap: 10px;
+}
+.eyebrow::before, .eyebrow::after {
+  content: '';
+  display: inline-block;
+  width: 24px; height: 1px;
+  background: var(--border-strong);
+}
+.section__title {
+  font-family: 'Instrument Serif', serif;
+  font-weight: 400;
+  font-size: clamp(34px, 4.4vw, 56px);
+  line-height: 1.04;
+  letter-spacing: -0.018em;
+  max-width: 820px;
+  margin: 0 auto 16px;
+}
+.section__title em { font-style: italic; }
+.section__sub {
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+/* ================================================================
+   CONVERSAS — 3 mockups WhatsApp lado a lado (SHOWCASE CENTRAL)
+   ================================================================ */
+.chats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+@media (max-width: 1000px) { .chats { grid-template-columns: 1fr; } }
+
+.chat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.02), 0 18px 44px -22px rgba(0,0,0,0.18);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.chat:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.02), 0 24px 52px -22px rgba(0,0,0,0.25);
+}
+.chat__label {
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.chat__label-tag {
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.chat__label-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 22px;
+  line-height: 1.1;
+  letter-spacing: -0.012em;
+}
+.chat__header {
+  background: #008069;
+  color: white;
+  padding: 12px 18px;
+  display: flex; align-items: center; gap: 12px;
+  font-size: 13px;
+}
+.chat__avatar {
+  width: 32px; height: 32px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.18);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: 'Geist', sans-serif;
+}
+.chat__name { font-weight: 500; font-size: 14px; }
+.chat__status {
+  font-size: 11px;
+  opacity: 0.85;
+  margin-top: 1px;
+  display: flex; align-items: center; gap: 4px;
+}
+.chat__status::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 999px;
+  background: #4ade80;
+}
+.chat__body {
+  background: var(--whatsapp-bg);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' opacity='0.05'%3E%3Cpath d='M0 20 Q 10 10, 20 20 T 40 20' stroke='%23000' stroke-width='1' fill='none'/%3E%3C/svg%3E");
+  padding: 18px 16px;
+  flex: 1;
+  display: flex; flex-direction: column;
+  gap: 8px;
+  min-height: 380px;
+  position: relative;
+}
+.bubble {
+  max-width: 80%;
+  padding: 9px 13px 6px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  line-height: 1.4;
+  position: relative;
+  box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
+}
+.bubble--in {
+  background: white;
+  align-self: flex-start;
+  border-top-left-radius: 0;
+  color: #111b21;
+}
+.bubble--out {
+  background: var(--whatsapp-out);
+  align-self: flex-end;
+  border-top-right-radius: 0;
+  color: #111b21;
+}
+.bubble__time {
+  display: inline-block;
+  font-size: 10px;
+  color: rgba(0,0,0,0.45);
+  margin-left: 6px;
+  vertical-align: bottom;
+  white-space: nowrap;
+}
+.bubble--out .bubble__time::after {
+  content: ' ✓✓';
+  color: #53bdeb;
+}
+.bubble__author {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #06cf9c;
+  margin-bottom: 2px;
+}
+.bubble--out .bubble__author { color: #0a7c8c; }
+.bubble strong { font-weight: 600; }
+
+/* ================================================================
+   COMO FUNCIONA
+   ================================================================ */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+@media (max-width: 880px) { .steps { grid-template-columns: 1fr; } }
+
+.step {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 32px 28px 28px;
+  transition: transform 0.3s ease, border-color 0.2s ease, box-shadow 0.3s ease;
+}
+.step:hover {
+  transform: translateY(-3px);
+  border-color: var(--border-strong);
+  box-shadow: 0 18px 40px -24px rgba(0,0,0,0.15);
+}
+.step__num {
+  font-family: 'Instrument Serif', serif;
+  font-size: 62px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  margin-bottom: 20px;
+  display: block;
+}
+.step__num em { font-style: italic; }
+.step__title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 25px;
+  line-height: 1.15;
+  letter-spacing: -0.012em;
+  margin-bottom: 12px;
+}
+.step__text {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+.step__meta {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  font-size: 11.5px;
+  font-family: 'Geist Mono', monospace;
+  color: var(--ink-muted);
+  letter-spacing: 0.02em;
+}
+
+/* ================================================================
+   CAPABILITIES — 6 cards, sem tabs
+   ================================================================ */
+.capabilities-wrap {
+  background: var(--bg-soft);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.capabilities-wrap .section { padding-top: 104px; padding-bottom: 104px; }
+
+.capabilities {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+@media (max-width: 880px) { .capabilities { grid-template-columns: 1fr; } }
+
+.capability {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px 26px;
+  transition: transform 0.3s ease, border-color 0.2s ease;
+}
+.capability:hover { transform: translateY(-3px); border-color: var(--border-strong); }
+.capability__icon {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  background: var(--ink);
+  color: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 20px;
+}
+.capability__title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 23px;
+  line-height: 1.15;
+  letter-spacing: -0.012em;
+  margin-bottom: 10px;
+}
+.capability__text {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+.capability__tag {
+  margin-top: 16px;
+  display: inline-block;
+  font-size: 11px;
+  font-family: 'Geist Mono', monospace;
+  color: var(--ink-muted);
+  letter-spacing: 0.04em;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  width: 100%;
+}
+
+/* ================================================================
+   FLOW — A cadeia de automação (tribunal → você → cliente)
+   ================================================================ */
+.flow-wrap {
+  background: var(--ink);
+  color: var(--bg);
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+}
+.flow-wrap .section { padding-top: 88px; padding-bottom: 88px; }
+.flow-wrap .eyebrow { color: var(--ink-faded); }
+.flow-wrap .eyebrow::before, .flow-wrap .eyebrow::after { background: var(--ink-soft); }
+.flow-wrap .section__title { color: var(--bg); }
+.flow-wrap .section__sub { color: var(--ink-faded); }
+
+.flow {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+  align-items: stretch;
+  position: relative;
+}
+@media (max-width: 1000px) {
+  .flow { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+}
+@media (max-width: 540px) {
+  .flow { grid-template-columns: 1fr; }
+}
+
+.flow__step {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 22px 20px;
+  display: flex; flex-direction: column;
+  gap: 14px;
+  position: relative;
+  transition: background 0.25s ease, border-color 0.25s ease;
+}
+.flow__step:hover {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.16);
+}
+.flow__num {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--ink-faded);
+}
+.flow__icon {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.08);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--bg);
+}
+.flow__title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 19px;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--bg);
+}
+.flow__text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-faded);
+}
+.flow__arrow {
+  position: absolute;
+  right: -14px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--ink-soft);
+  z-index: 2;
+}
+@media (max-width: 1000px) { .flow__arrow { display: none; } }
+
+/* ===== ESTEIRA ANIMADA — passos se acendem em sequência ===== */
+.flow__step {
+  opacity: 0.28;
+  transform: translateY(10px);
+  transition: opacity 0.55s ease, transform 0.55s ease, background 0.25s ease, border-color 0.25s ease;
+}
+.flow__step .flow__icon {
+  transition: background 0.55s ease, transform 0.55s ease, color 0.55s ease;
+}
+.flow__arrow {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+/* estado "aceso" disparado pela esteira */
+.flow.is-running .flow__step.lit {
+  opacity: 1;
+  transform: translateY(0);
+}
+.flow.is-running .flow__step.lit .flow__icon {
+  background: var(--bg);
+  color: var(--ink);
+  transform: scale(1.05);
+}
+.flow.is-running .flow__step.lit .flow__arrow {
+  opacity: 1;
+}
+/* respeita quem prefere menos movimento */
+@media (prefers-reduced-motion: reduce) {
+  .flow__step { opacity: 1; transform: none; }
+  .flow__arrow { opacity: 1; }
+}
+
+.flow__footer {
+  margin-top: 36px;
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--ink-faded);
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 17px;
+}
+
+/* ================================================================
+   STAT STRIP — banner de credibilidade entre seções
+   ================================================================ */
+.stat-strip {
+  position: relative; z-index: 2;
+  max-width: 1380px;
+  margin: 0 auto;
+  padding: 32px 5vw;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+@media (max-width: 720px) {
+  .stat-strip { grid-template-columns: 1fr; gap: 22px; padding: 28px 5vw; }
+}
+.stat-strip__item {
+  display: flex; flex-direction: column;
+  gap: 4px;
+  text-align: center;
+}
+.stat-strip__num {
+  font-family: 'Instrument Serif', serif;
+  font-size: 32px;
+  line-height: 1;
+  letter-spacing: -0.018em;
+  color: var(--ink);
+}
+.stat-strip__num em { font-style: italic; }
+.stat-strip__label {
+  font-size: 12px;
+  color: var(--ink-muted);
+  letter-spacing: 0.02em;
+}
+
+
+.testimonials {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+@media (max-width: 880px) { .testimonials { grid-template-columns: 1fr; } }
+
+.testimonial {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 30px 28px 26px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.testimonial:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 40px -24px rgba(0,0,0,0.15);
+}
+.testimonial__stars {
+  color: var(--ink);
+  letter-spacing: 1.5px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+.testimonial__quote {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 21px;
+  line-height: 1.38;
+  margin-bottom: 24px;
+  letter-spacing: -0.008em;
+}
+.testimonial__quote::before { content: '"'; opacity: 0.35; margin-right: 2px; }
+.testimonial__quote::after { content: '"'; opacity: 0.35; margin-left: 2px; }
+.testimonial__author {
+  display: flex; align-items: center; gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.testimonial__avatar {
+  width: 40px; height: 40px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 500;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.testimonial__name { font-weight: 500; font-size: 14px; }
+.testimonial__role { font-size: 12px; color: var(--ink-muted); margin-top: 1px; }
+
+/* ================================================================
+   PREÇO
+   ================================================================ */
+.pricing {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 64px;
+}
+@media (max-width: 880px) { .pricing { grid-template-columns: 1fr; } }
+
+.price {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 34px 30px;
+  display: flex; flex-direction: column;
+  gap: 18px;
+  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.price:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 44px -24px rgba(0,0,0,0.18);
+}
+.price--feature {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
+}
+.price--feature .price__name,
+.price--feature .price__amount,
+.price--feature li { color: var(--bg); }
+.price--feature .price__sub,
+.price--feature .price__period { color: var(--ink-faded); }
+.price--feature .price__divider { border-color: rgba(255,255,255,0.18); }
+.price__tag {
+  position: absolute;
+  top: -11px; left: 50%; transform: translateX(-50%);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  white-space: nowrap;
+}
+.price__name {
+  font-family: 'Instrument Serif', serif;
+  font-size: 26px;
+  letter-spacing: -0.012em;
+}
+.price__sub {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-top: -10px;
+}
+.price__amount {
+  font-family: 'Instrument Serif', serif;
+  font-size: 56px;
+  line-height: 1;
+  letter-spacing: -0.022em;
+  display: flex; align-items: baseline; gap: 6px;
+}
+.price__amount small {
+  font-family: 'Geist', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--ink-muted);
+}
+.price__period {
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-top: -10px;
+}
+.price__divider {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 4px 0;
+}
+.price ul {
+  list-style: none;
+  display: flex; flex-direction: column; gap: 12px;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+}
+.price li {
+  display: flex; align-items: start; gap: 10px;
+  line-height: 1.45;
+}
+.price li svg { color: var(--ink); flex-shrink: 0; margin-top: 2px; }
+.price--feature li svg { color: var(--bg); }
+.price__cta { margin-top: auto; }
+.price__cta .btn { width: 100%; justify-content: center; }
+.price--feature .price__cta .btn {
+  background: var(--bg);
+  color: var(--ink);
+  border-color: var(--bg);
+}
+.price--feature .price__cta .btn:hover { background: rgba(255,255,255,0.9); }
+
+/* ================================================================
+   FAQ
+   ================================================================ */
+.faq { max-width: 740px; margin: 56px auto 0; }
+.faq-item { border-bottom: 1px solid var(--border); }
+.faq-item summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 24px 0;
+  display: flex; justify-content: space-between; align-items: start;
+  gap: 24px;
+  font-size: 17px;
+  font-weight: 500;
+  transition: color 0.15s ease;
+  letter-spacing: -0.005em;
+}
+.faq-item summary:hover { color: var(--ink-soft); }
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary::after {
+  content: '';
+  flex-shrink: 0;
+  width: 28px; height: 28px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230a0a0a' stroke-width='1.5'%3E%3Cline x1='12' y1='5' x2='12' y2='19'/%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3C/svg%3E");
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: transform 0.25s ease;
+}
+.faq-item[open] summary::after { transform: rotate(45deg); }
+.faq-item p {
+  padding-bottom: 24px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  max-width: 620px;
+}
+
+/* ================================================================
+   CTA FINAL
+   ================================================================ */
+.final-cta {
+  background: var(--musgo-900);
+  color: var(--creme);
+  margin-top: 72px;
+  padding: 104px 5vw;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.final-cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(255,255,255,0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(255,255,255,0.03) 0%, transparent 50%);
+}
+.final-cta__inner { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; }
+.final-cta__title {
+  font-family: 'Instrument Serif', serif;
+  font-weight: 400;
+  font-size: clamp(38px, 5.2vw, 68px);
+  line-height: 1.04;
+  letter-spacing: -0.018em;
+  margin-bottom: 20px;
+}
+.final-cta__title em { font-style: italic; }
+.final-cta__sub {
+  font-size: 17px;
+  color: var(--ink-faded);
+  margin-bottom: 36px;
+}
+.final-cta__group {
+  display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+}
+.final-cta .btn {
+  background: var(--bg);
+  color: var(--ink);
+  border-color: var(--bg);
+}
+.final-cta .btn:hover { background: rgba(255,255,255,0.92); }
+.final-cta .btn--ghost {
+  background: transparent;
+  color: var(--bg);
+  border-color: rgba(255,255,255,0.3);
+}
+.final-cta .btn--ghost:hover { background: rgba(255,255,255,0.08); border-color: var(--bg); }
+
+/* ================================================================
+   FOOTER
+   ================================================================ */
+.footer {
+  background: var(--bg);
+  padding: 64px 5vw 36px;
+  border-top: 1px solid var(--border);
+}
+.footer__top {
+  display: grid;
+  grid-template-columns: 1.5fr repeat(3, 1fr);
+  gap: 40px;
+  max-width: 1380px;
+  margin: 0 auto 52px;
+}
+@media (max-width: 880px) { .footer__top { grid-template-columns: 1fr 1fr; gap: 32px; } }
+
+.footer__brand-block .brand { margin-bottom: 14px; }
+.footer__tagline {
+  font-size: 14px;
+  color: var(--ink-soft);
+  max-width: 280px;
+  line-height: 1.55;
+}
+.footer__col h4 {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  font-weight: 500;
+  margin-bottom: 18px;
+}
+.footer__col ul { list-style: none; display: flex; flex-direction: column; gap: 11px; }
+.footer__col a {
+  font-size: 14px;
+  color: var(--ink-soft);
+  transition: color 0.15s ease;
+}
+.footer__col a:hover { color: var(--ink); }
+.footer__bottom {
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  max-width: 1380px;
+  margin: 0 auto;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+/* ================================================================
+   ANIMAÇÕES
+   ================================================================ */
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.hero__social { animation: riseIn 0.6s 0.05s ease backwards; }
+.hero__headline { animation: riseIn 0.7s 0.15s ease backwards; }
+.hero__sub { animation: riseIn 0.6s 0.3s ease backwards; }
+.hero__cta { animation: riseIn 0.6s 0.4s ease backwards; }
+.hero__hint { animation: riseIn 0.6s 0.5s ease backwards; }
+.hub-center { animation: riseIn 0.6s 0.35s ease backwards; }
+.hub-node--cliente-novo { animation: riseIn 0.5s 0.55s ease backwards; }
+.hub-node--cliente-antigo { animation: riseIn 0.5s 0.7s ease backwards; }
+.hub-node--advogado { animation: riseIn 0.5s 0.85s ease backwards; }
+.hub-node--processos { animation: riseIn 0.5s 1s ease backwards; }
+.hub-lines { animation: riseIn 0.8s 1.1s ease backwards; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .reveal-section {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal-section.is-visible { opacity: 1; transform: translateY(0); }
+}
+
+.demo-note {
+  font-size: 12.5px;
+  color: var(--ink-faded);
+  font-style: italic;
+  margin-top: 10px;
+  text-align: center;
+}
+/* ===== DEMO FRAME ===== */
+.demo-frame {
+  max-width: 880px;
+  margin: 48px auto 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 40px 90px -50px rgba(0,0,0,.45);
+}
+.demo-frame__bar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 16px;
+  background: var(--bg-soft);
+  border-bottom: 1px solid var(--border);
+}
+.demo-frame__dot { width: 10px; height: 10px; border-radius: 999px; background: var(--border-strong); }
+.demo-frame__url { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--ink-faded); margin-left: 10px; }
+.demo-frame__iframe {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  background: var(--bg);
+}
+@media (max-width: 640px) {
+  .demo-frame { margin-top: 32px; border-radius: 12px; }
+}
+
+
+/* ===== Grupo de CTA duplo (assinar + agendar) ===== */
+.cta-duo { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.cta-band .cta-duo { margin-top: 0; }
+@media (max-width: 480px) { .cta-duo { flex-direction: column; width: 100%; } .cta-duo .btn { width: 100%; justify-content: center; } }
+.price__cta .cta-duo { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.price__cta .cta-duo .btn { width: 100%; justify-content: center; }
+
+/* ===== MANIFESTO (absorcao) ===== */
+.manifesto { max-width: 1080px; margin: 0 auto; padding: 96px 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
+.manifesto__eyebrow { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-faded); font-family: 'Geist Mono', monospace; margin-bottom: 24px; }
+.manifesto__title { font-family: 'Instrument Serif', serif; font-size: 38px; line-height: 1.18; letter-spacing: -0.015em; color: var(--ink); }
+.manifesto__title em { font-style: italic; }
+.manifesto__stage { position: relative; height: 380px; }
+.manifesto__core { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 140px; height: 140px; border-radius: 50%; background: var(--ink); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5; transition: transform 0.25s ease; box-shadow: 0 30px 70px -30px rgba(0,0,0,0.5); }
+.manifesto__core-avatar { width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.14); display: flex; align-items: center; justify-content: center; color: var(--bg); font-family: 'Instrument Serif', serif; font-size: 15px; margin-bottom: 6px; }
+.manifesto__core-name { color: var(--bg); font-family: 'Instrument Serif', serif; font-size: 18px; }
+.manifesto__core-role { color: #888; font-size: 8.5px; letter-spacing: 0.12em; margin-top: 2px; }
+.manifesto__counter { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--ink-muted); white-space: nowrap; }
+.manifesto__task { position: absolute; transform: translate(-50%, -50%); font-size: 11.5px; background: var(--surface); border: 0.5px solid var(--border); border-radius: 999px; padding: 6px 13px; white-space: nowrap; color: var(--ink-soft); opacity: 0; transition: all 1.5s cubic-bezier(0.5, 0, 0.3, 1); z-index: 3; box-shadow: 0 6px 18px -10px rgba(0,0,0,0.25); pointer-events: none; }
+@media (max-width: 820px) { .manifesto { grid-template-columns: 1fr; gap: 48px; padding: 72px 24px; text-align: center; } .manifesto__title { font-size: 31px; } .manifesto__stage { height: 340px; margin-top: 8px; } }
+
+/* CTA band dentro de seção escura */
+.cta-band--dark { margin-top: 56px; }
+.cta-band--dark .cta-band__title { color: #fafaf9; }
+.cta-band--dark .cta-band__sub { color: rgba(250,250,249,0.6); }
+.cta-band--dark .btn { background: #fafaf9; color: #0a0a0a; border-color: #fafaf9; }
+.cta-band--dark .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px -8px rgba(0,0,0,0.5); }
+.cta-band--dark .btn--ghost { background: transparent; color: #fafaf9; border-color: rgba(250,250,249,0.3); }
+.cta-band--dark .btn--ghost:hover { background: rgba(250,250,249,0.08); color: #fafaf9; border-color: #fafaf9; }
+
+/* ===== SEÇÃO ÓRBITAS (Veja em ação) ===== */
+.orbitas { max-width: 1080px; margin: 0 auto; padding: 40px 32px 0; }
+.orbita { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 56px; align-items: center; padding: 56px 0; border-top: 0.5px solid var(--border); }
+.orbita:first-of-type { border-top: none; }
+.orbita:last-of-type { padding-bottom: 8px; }
+.orbita--flip .orbita__visual { order: -1; }
+.orbita__num { font-family: 'Geist Mono', monospace; font-size: 12px; letter-spacing: 0.12em; color: var(--ink-faded); margin-bottom: 16px; }
+.orbita__tag { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--ink-muted); margin-bottom: 14px; }
+.orbita__tag::before { content: ''; width: 6px; height: 6px; border-radius: 999px; background: var(--whatsapp-green); }
+.orbita__title { font-family: 'Instrument Serif', serif; font-size: 30px; line-height: 1.18; letter-spacing: -0.015em; color: var(--ink); margin-bottom: 16px; }
+.orbita__title em { font-style: italic; }
+.orbita__desc { font-size: 15.5px; line-height: 1.7; color: var(--ink-soft); }
+.orbita__visual { position: relative; }
+/* mini-chat reaproveitando estilo whatsapp */
+.miniwa { background: var(--whatsapp-bg); border-radius: 18px; padding: 16px; box-shadow: 0 30px 70px -40px rgba(0,0,0,0.4); border: 0.5px solid var(--border); }
+.miniwa__head { display: flex; align-items: center; gap: 10px; padding: 4px 4px 14px; border-bottom: 0.5px solid rgba(0,0,0,0.06); margin-bottom: 14px; }
+.miniwa__av { width: 34px; height: 34px; border-radius: 999px; background: var(--ink); color: #fff; display: flex; align-items: center; justify-content: center; font-family: 'Instrument Serif', serif; font-size: 15px; }
+.miniwa__who b { font-size: 13px; display: block; color: var(--ink); }
+.miniwa__who span { font-size: 11px; color: var(--positive); }
+.miniwa__body { display: flex; flex-direction: column; gap: 9px; }
+.mwb { max-width: 84%; padding: 9px 13px; border-radius: 12px; font-size: 13.5px; line-height: 1.45; opacity: 0; transform: translateY(8px); transition: opacity 0.4s ease, transform 0.4s ease; }
+.orbita.is-visible .mwb { opacity: 1; transform: none; }
+.orbita.is-visible .mwb:nth-child(2) { transition-delay: 0.5s; }
+.orbita.is-visible .mwb:nth-child(3) { transition-delay: 1s; }
+.orbita.is-visible .mwb:nth-child(4) { transition-delay: 1.5s; }
+.mwb--in { background: #fff; align-self: flex-start; border-top-left-radius: 3px; color: var(--ink); }
+.mwb--out { background: var(--whatsapp-out); align-self: flex-end; border-top-right-radius: 3px; color: var(--ink); }
+.mwb--lara::before { content: 'Lara · assistente virtual'; display: block; font-size: 10px; color: var(--positive); font-weight: 600; margin-bottom: 3px; }
+.mwb time { display: block; font-size: 9.5px; color: rgba(0,0,0,0.35); text-align: right; margin-top: 3px; }
+@media (max-width: 820px) {
+  .orbitas { padding: 24px 20px 64px; }
+  .orbita { grid-template-columns: minmax(0, 1fr); gap: 28px; padding: 48px 0; }
+  .orbita--flip .orbita__visual { order: 0; }
+  .orbita__title { font-size: 26px; }
+  .miniwa { max-width: 100%; box-sizing: border-box; }
+}
+
+/* ===== RESGATE: stat strip + como funciona ===== */
+
+/* ===== A DIFERENÇA — duas metades que viram uma ===== */
+.uniao { max-width: 1000px; margin: 0 auto; padding: 96px 32px; }
+.uniao__head { text-align: center; margin-bottom: 48px; }
+.uniao__eyebrow { font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faded); margin-bottom: 18px; }
+.uniao__title { font-family: 'Instrument Serif', serif; font-size: 38px; line-height: 1.15; letter-spacing: -0.015em; color: var(--ink); }
+.uniao__title em { font-style: italic; }
+.uniao__split { display: grid; grid-template-columns: 1fr 1fr; gap: 0; max-width: 760px; margin: 0 auto; }
+.uniao__half { padding: 24px 32px; }
+.uniao__half:first-child { border-right: 1px solid var(--border-strong); text-align: right; }
+.uniao__label { font-family: 'Geist Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--ink-faded); text-transform: uppercase; margin-bottom: 12px; }
+.uniao__claim { font-family: 'Instrument Serif', serif; font-size: 22px; line-height: 1.3; color: var(--ink-muted); }
+.uniao__claim b { color: var(--ink); font-weight: normal; }
+.uniao__connector { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 28px 0; }
+.uniao__connector span { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--ink-faded); letter-spacing: 0.06em; }
+.uniao__connector::before, .uniao__connector::after { content: ''; height: 1px; width: 60px; background: var(--border-strong); }
+.uniao__merged { background: var(--ink); border-radius: 18px; padding: 44px 32px; text-align: center; max-width: 720px; margin: 0 auto; }
+.uniao__merged-title { font-family: 'Instrument Serif', serif; font-size: 32px; line-height: 1.2; color: var(--bg); }
+.uniao__merged-title em { font-style: italic; }
+.uniao__merged-sub { font-size: 15px; line-height: 1.65; color: rgba(250,250,249,0.65); margin-top: 16px; max-width: 480px; margin-left: auto; margin-right: auto; }
+.uniao__merged-sub b { color: var(--bg); font-weight: 600; }
+@media (max-width: 720px) {
+  .uniao { padding: 64px 22px; }
+  .uniao__title { font-size: 28px; }
+  .uniao__split { grid-template-columns: 1fr; gap: 0; }
+  .uniao__half { padding: 20px 0; text-align: center !important; border-right: none !important; }
+  .uniao__half:first-child { border-bottom: 1px solid var(--border-strong); }
+  .uniao__merged { padding: 36px 24px; }
+  .uniao__merged-title { font-size: 26px; }
+}
+
+/* ===== VÍDEO DA PLATAFORMA ===== */
+.plataforma { max-width: 1040px; margin: 0 auto; padding: 48px 32px 96px; border-top: 0.5px solid var(--border); }
+.plataforma__head { text-align: center; margin-bottom: 44px; padding-top: 48px; }
+.plataforma__eyebrow { font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faded); margin-bottom: 18px; }
+.plataforma__title { font-family: 'Instrument Serif', serif; font-size: 38px; line-height: 1.15; letter-spacing: -0.015em; color: var(--ink); }
+.plataforma__title em { font-style: italic; }
+.plataforma__sub { font-size: 15px; line-height: 1.6; color: var(--ink-soft); max-width: 460px; margin: 16px auto 0; }
+.plataforma__frame { position: relative; border-radius: 18px; overflow: hidden; border: 0.5px solid var(--border); box-shadow: 0 50px 100px -50px rgba(0,0,0,0.5); background: var(--surface); }
+.plataforma__bar { display: flex; align-items: center; gap: 7px; padding: 13px 18px; background: var(--surface-sunk); border-bottom: 0.5px solid var(--border); }
+.plataforma__dot { width: 11px; height: 11px; border-radius: 999px; background: var(--border-strong); }
+.plataforma__url { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--ink-faded); margin-left: 12px; }
+.plataforma__screen { position: relative; width: 100%; aspect-ratio: 16/9; }
+.plataforma__nota { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 18px; font-size: 12px; color: var(--ink-muted); font-style: italic; }
+.plataforma__nota svg { width: 14px; height: 14px; flex-shrink: 0; stroke: var(--ink-faded); }
+.plataforma__iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+@media (max-width: 600px) { .plataforma { padding: 24px 20px 64px; } .plataforma__title { font-size: 28px; } .plataforma__screen { aspect-ratio: 4/5; } }
+
+#acao { padding-bottom: 24px; }
+#plataforma.section { padding-top: 32px; }
+.plataforma__head { padding-top: 40px; }
+/* ===== SEÇÃO DE DOR (o problema) ===== */
+.dor-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: 1100px;
+  margin: 48px auto 0;
+}
+.dor-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px 26px;
+  position: relative;
+}
+.dor-card__mark {
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  background: var(--bg-soft);
+  color: var(--ink-muted);
+  font-family: 'Instrument Serif', serif;
+  font-size: 22px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 18px;
+}
+.dor-card__title {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 10px;
+  line-height: 1.25;
+}
+.dor-card__text {
+  font-size: 15px;
+  color: var(--ink-muted);
+  line-height: 1.6;
+}
+@media (max-width: 860px) {
+  .dor-grid { grid-template-columns: 1fr; gap: 14px; max-width: 520px; }
+}
+/* ===== PROVA SOCIAL / RESULTADO ===== */
+.prova-wrap {
+  max-width: 760px; margin: 0 auto; text-align: center;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 18px; padding: 48px 40px;
+}
+.prova-eyebrow {
+  font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--musgo-500); margin-bottom: 22px;
+}
+.prova-quote {
+  font-family: 'Instrument Serif', serif; font-size: 28px; line-height: 1.32;
+  color: var(--ink); margin-bottom: 26px;
+}
+.prova-quote em { color: var(--musgo-500); font-style: italic; }
+.prova-author { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 34px; }
+.prova-author__avatar {
+  width: 44px; height: 44px; border-radius: 999px; background: var(--musgo-900);
+  color: var(--creme); display: flex; align-items: center; justify-content: center;
+  font-family: 'Instrument Serif', serif; font-size: 17px;
+}
+.prova-author__name { font-weight: 500; color: var(--ink); text-align: left; }
+.prova-author__role { font-size: 13px; color: var(--ink-muted); text-align: left; }
+.prova-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding-top: 30px; border-top: 1px solid var(--border); }
+.prova-metric__num { font-family: 'Instrument Serif', serif; font-size: 34px; color: var(--musgo-500); line-height: 1; }
+.prova-metric__label { font-size: 13px; color: var(--ink-muted); margin-top: 8px; line-height: 1.4; }
+.prova-note { font-size: 12px; color: var(--ink-faded); margin-top: 24px; }
+
+/* ===== COMPARAÇÃO DE CUSTO ===== */
+.comp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 980px; margin: 48px auto 0; }
+.comp-card { border-radius: 16px; padding: 32px 30px; border: 1px solid var(--border); }
+.comp-card--sem { background: var(--bg-soft); }
+.comp-card--com { background: var(--musgo-900); border-color: var(--musgo-900); }
+.comp-card--com .comp-list li, .comp-card--com .comp-list li strong { color: var(--creme); }
+.comp-card__tag { display: inline-block; font-size: 13px; font-weight: 500; padding: 5px 12px; border-radius: 999px; background: var(--surface); color: var(--ink-muted); margin-bottom: 20px; }
+.comp-card__tag--ok { background: var(--salvia-300); color: var(--musgo-900); }
+.comp-list { list-style: none; display: flex; flex-direction: column; gap: 13px; }
+.comp-list li { font-size: 15px; color: var(--ink-soft); line-height: 1.5; padding-left: 20px; position: relative; }
+.comp-list li::before { content: ''; position: absolute; left: 0; top: 9px; width: 7px; height: 7px; border-radius: 999px; background: var(--ink-faded); }
+.comp-card--com .comp-list li::before { background: var(--salvia-300); }
+.comp-card__total { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 15px; color: var(--ink); }
+.comp-card--com .comp-card__total { border-top-color: var(--musgo-700); color: var(--creme); }
+.comp-card__total--ok { color: var(--salvia-300); }
+
+@media (max-width: 860px) {
+  .prova-metrics { grid-template-columns: 1fr; gap: 24px; }
+  .comp-grid { grid-template-columns: 1fr; max-width: 520px; }
+  .prova-quote { font-size: 23px; }
+}
+/* ===== FORMULÁRIO DE IMPLEMENTAÇÃO ===== */
+.form-wrap {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 48px;
+  max-width: 1040px; margin: 0 auto; align-items: start;
+}
+.form-intro { padding-top: 8px; }
+.form-intro .section__title { text-align: left; }
+.form-intro .section__sub { text-align: left; margin-left: 0; }
+.form-intro .eyebrow { justify-content: flex-start; }
+.form-bullets { list-style: none; margin-top: 28px; display: flex; flex-direction: column; gap: 14px; }
+.form-bullets li { display: flex; align-items: flex-start; gap: 10px; font-size: 15px; color: var(--ink-soft); line-height: 1.45; }
+.form-bullets li svg { color: var(--musgo-500); flex-shrink: 0; margin-top: 2px; }
+.form-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 18px; padding: 34px 32px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-field { display: flex; flex-direction: column; gap: 6px; }
+.form-field label { font-size: 13px; font-weight: 500; color: var(--ink-soft); }
+.form-field input, .form-field select {
+  font: inherit; font-size: 15px; color: var(--ink);
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 10px; padding: 11px 13px; width: 100%;
+  transition: border-color 0.15s;
+}
+.form-field input:focus, .form-field select:focus {
+  outline: none; border-color: var(--musgo-500);
+  box-shadow: 0 0 0 3px rgba(61,115,85,0.12);
+}
+.form-submit { width: 100%; justify-content: center; margin-top: 6px; }
+.form-disclaimer { font-size: 12px; color: var(--ink-muted); text-align: center; margin-top: 2px; }
+.form-success {
+  background: var(--musgo-900); color: var(--creme);
+  border-radius: 18px; padding: 48px 36px; text-align: center;
+}
+.form-success h3 { font-family: 'Instrument Serif', serif; font-size: 26px; margin-bottom: 12px; color: var(--creme); }
+.form-success p { color: var(--salvia-300); font-size: 15px; line-height: 1.5; }
+@media (max-width: 860px) {
+  .form-wrap { grid-template-columns: 1fr; gap: 32px; }
+  .form-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ===== HEADER / NAV ===== -->
+<header class="nav">
+  <div class="brand">Nomoscan<span class="brand__dot"></span></div>
+  <nav class="nav__links">
+    <a href="#acao">Veja em ação</a>
+    <a href="#implementar">Implementação</a>
+  </nav>
+  <div class="nav__cta">
+    <a href="#login" class="btn btn--ghost btn--sm">Entrar</a>
+    <a href="#implementar" class="btn btn--sm">Implementar a Lara</a>
+  </div>
+</header>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="hero__grid">
+    <div>
+      <div class="hero__social">
+        <span class="hero__avatars">
+          <span>GT</span><span>MM</span><span>RA</span>
+        </span>
+        <span class="hero__stars">★★★★★</span>
+        <span>Escritórios em MS, GO e SP</span>
+      </div>
+
+      <h1 class="hero__headline">
+        A secretária do<br>
+        seu escritório.<br>
+        <em>Em IA.</em>
+      </h1>
+
+      <p class="hero__sub">
+        A Lara atende clientes no WhatsApp 24h, <em class="hero__sub-hl">acompanha suas
+        publicações</em>, transforma publicação em prazo na sua agenda, remarca reuniões e
+        avisa o cliente sozinha, e te mostra a equipe inteira evoluindo em tempo real.
+        Seu escritório no piloto automático — e você ainda no comando.
+      </p>
+
+      <div class="hero__cta">
+        <a href="#implementar" class="btn">
+          Implementar a Lara
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+        <a href="https://wa.me/5567991613715?text=Ol%C3%A1!%20Gostaria%20de%20agendar%20uma%20demonstra%C3%A7%C3%A3o%20do%20Nomoscan." class="btn btn--ghost">
+          Agendar demonstração
+        </a>
+      </div>
+
+      <div class="hero__hint">
+        <span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Sem compromisso
+        </span>
+        <span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Demonstração ao vivo
+        </span>
+        <span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Funciona em 5 minutos
+        </span>
+      </div>
+    </div>
+
+    <!-- ===== HERO VISUAL: HUB CENTRAL ===== -->
+    <div class="hero__visual">
+      <div class="hub-wrap">
+        <div class="hub-bg"></div>
+
+        <!-- Linhas conectoras SVG -->
+        <svg class="hub-lines" viewBox="0 0 560 560" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 120 80 Q 200 200, 280 280"/>
+          <path d="M 440 80 Q 360 200, 280 280"/>
+          <path d="M 100 460 Q 200 380, 280 280"/>
+          <path d="M 460 460 Q 360 380, 280 280"/>
+        </svg>
+
+        <!-- Centro: Lara -->
+        <div class="hub-center">
+          <div class="hub-center__pulse"></div>
+          <div class="hub-center__avatar">L</div>
+          <div class="hub-center__name">Lara</div>
+          <div class="hub-center__role">Secretária IA</div>
+        </div>
+
+        <!-- Nó: Cliente novo -->
+        <div class="hub-node hub-node--cliente-novo">
+          <div class="hub-node__icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="7" r="4"/>
+              <path d="M5 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/>
+              <line x1="20" y1="3" x2="20" y2="9"/>
+              <line x1="23" y1="6" x2="17" y2="6"/>
+            </svg>
+          </div>
+          <div class="hub-node__body">
+            <div class="hub-node__title">Cliente novo</div>
+            <div class="hub-node__sub">Lara qualifica e agenda</div>
+          </div>
+        </div>
+
+        <!-- Nó: Cliente antigo -->
+        <div class="hub-node hub-node--cliente-antigo">
+          <div class="hub-node__icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+            </svg>
+          </div>
+          <div class="hub-node__body">
+            <div class="hub-node__title">Cliente antigo</div>
+            <div class="hub-node__sub">Recebe update do processo</div>
+          </div>
+        </div>
+
+        <!-- Nó: Advogado -->
+        <div class="hub-node hub-node--advogado">
+          <div class="hub-node__icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 7h-9"/><path d="M14 17H5"/>
+              <circle cx="17" cy="17" r="3"/>
+              <circle cx="7" cy="7" r="3"/>
+            </svg>
+          </div>
+          <div class="hub-node__body">
+            <div class="hub-node__title">Advogado</div>
+            <div class="hub-node__sub">Dá ordens, recebe relatório</div>
+          </div>
+        </div>
+
+        <!-- Nó: Processos -->
+        <div class="hub-node hub-node--processos">
+          <div class="hub-node__icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+          </div>
+          <div class="hub-node__body">
+            <div class="hub-node__title">Processos</div>
+            <div class="hub-node__sub">Monitora 24h, calcula prazos</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ===== O PROBLEMA — DOR NOMEADA ===== -->
+<section class="section reveal-section" id="dor">
+  <div class="section-header">
+    <div class="eyebrow">O dia do advogado hoje</div>
+    <h2 class="section__title">Você estudou anos pra advogar. <em>Não pra isso.</em></h2>
+    <p class="section__sub">
+      Revisar prazo, responder WhatsApp, remarcar reunião, atualizar planilha. O operacional
+      consome seu dia — ou o salário de um estagiário contratado só pra isso. E quase tudo
+      poderia rodar sozinho.
+    </p>
+  </div>
+
+  <div class="dor-grid">
+    <div class="dor-card">
+      <div class="dor-card__mark">!</div>
+      <h3 class="dor-card__title">Horas no que não é advocacia</h3>
+      <p class="dor-card__text">Conferir publicação, lançar prazo na agenda, responder a mesma pergunta de cliente cinco vezes. Tarefa-meio que come o tempo que devia ser de petição e estratégia.</p>
+    </div>
+    <div class="dor-card">
+      <div class="dor-card__mark">!</div>
+      <h3 class="dor-card__title">Estagiário caro pra tarefa simples</h3>
+      <p class="dor-card__text">Pra dar conta, contrata-se estagiário só pra revisar prazo, atender WhatsApp e mexer na agenda. Um custo fixo todo mês pra um trabalho que uma secretária IA faz sem errar.</p>
+    </div>
+    <div class="dor-card">
+      <div class="dor-card__mark">!</div>
+      <h3 class="dor-card__title">Tudo trava quando falta gente</h3>
+      <p class="dor-card__text">Estagiário de férias, secretária doente, um dia corrido — e o controle de prazo falha justo quando ninguém pode olhar. O operacional manual depende de alguém estar presente.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ===== VEJA EM AÇÃO — AS 3 ÓRBITAS ===== -->
+<section class="section reveal-section" id="acao">
+  <div class="section-header">
+    <div class="eyebrow">Veja em ação</div>
+    <h2 class="section__title">Tudo que gira em torno de você, <em>ela resolve.</em></h2>
+    <p class="section__sub">
+      O cliente, o prazo, a sua equipe. A Lara está no centro de cada conversa — e cada uma sai resolvida.
+    </p>
+    <p class="demo-note">Diálogos ilustrativos, com dados fictícios.</p>
+  </div>
+
+  <div class="orbitas">
+
+    <div class="orbita reveal-section">
+      <div class="orbita__text">
+        <div class="orbita__num">ÓRBITA 01 · O CLIENTE</div>
+        <div class="orbita__tag">No WhatsApp do escritório</div>
+        <div class="orbita__title">O cliente chega. Ela <em>qualifica e agenda</em> — sozinha.</div>
+        <p class="orbita__desc">Lead novo às 22h, fora do horário? A Lara atende, entende o caso, faz as perguntas certas e já marca a conversa com você. Você acorda com a agenda cheia, não com mensagens pra responder.</p>
+      </div>
+      <div class="orbita__visual">
+        <div class="miniwa">
+          <div class="miniwa__head"><div class="miniwa__av">L</div><div class="miniwa__who"><b>Lara · Tessaro Advogados</b><span>online</span></div></div>
+          <div class="miniwa__body">
+            <div class="mwb mwb--in">Boa noite, vi vocês no Instagram. Queria saber sobre divórcio consensual…<time>22:14</time></div>
+            <div class="mwb mwb--out mwb--lara">Boa noite! Posso te ajudar 🙂 Vocês já conversaram sobre partilha de bens e guarda?<time>22:14</time></div>
+            <div class="mwb mwb--in">Sim, tá tudo combinado. Só não temos filhos.<time>22:15</time></div>
+            <div class="mwb mwb--out mwb--lara">Perfeito — isso simplifica. Agendei uma conversa com o Dr. Tessaro terça às 10h. ✓<time>22:15</time></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="orbita orbita--flip reveal-section">
+      <div class="orbita__text">
+        <div class="orbita__num">ÓRBITA 02 · O PRAZO</div>
+        <div class="orbita__tag">No painel, automático</div>
+        <div class="orbita__title">Saiu publicação. Ela <em>calcula e lança</em> na agenda.</div>
+        <p class="orbita__desc">A Lara acompanha suas publicações, identifica o prazo, calcula a urgência e lança no seu calendário — antes de você nem saber que saiu. E avisa o cliente, na linguagem dele, sem você pedir.</p>
+      </div>
+      <div class="orbita__visual">
+        <div class="miniwa">
+          <div class="miniwa__head"><div class="miniwa__av">L</div><div class="miniwa__who"><b>Lara · Tessaro Advogados</b><span>online</span></div></div>
+          <div class="miniwa__body">
+            <div class="mwb mwb--out mwb--lara">Oi Maria! Saiu novidade no seu processo na 2ª Vara Cível. O juiz marcou audiência pra 27 de junho às 14h.<time>14:22</time></div>
+            <div class="mwb mwb--out mwb--lara">Anota na sua agenda, tudo bem? Não podemos perder essa data.<time>14:22</time></div>
+            <div class="mwb mwb--in">Já anotei! Preciso fazer algo antes?<time>14:24</time></div>
+            <div class="mwb mwb--out mwb--lara">Só comparecer. O Dr. Tessaro estará com você. 🙂<time>14:24</time></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="orbita reveal-section">
+      <div class="orbita__text">
+        <div class="orbita__num">ÓRBITA 03 · VOCÊ</div>
+        <div class="orbita__tag">Você no comando</div>
+        <div class="orbita__title">Você dá a ordem. Ela <em>executa e relata.</em></div>
+        <p class="orbita__desc">"Quantos prazos vencem essa semana?" "Marca reunião e avisa a Mariana." A Lara responde, executa e confirma — como uma secretária que nunca esquece, nunca dorme e nunca tira férias.</p>
+      </div>
+      <div class="orbita__visual">
+        <div class="miniwa">
+          <div class="miniwa__head"><div class="miniwa__av">L</div><div class="miniwa__who"><b>Lara · Tessaro Advogados</b><span>online</span></div></div>
+          <div class="miniwa__body">
+            <div class="mwb mwb--in">Lara, quantos prazos vencem essa semana?<time>08:42</time></div>
+            <div class="mwb mwb--out mwb--lara">Bom dia, doutor! 4 prazos: contestação Mariana (qua), recurso BB (qui), tréplica e quesitos (sex). O mais urgente é a contestação. ⚠<time>08:42</time></div>
+            <div class="mwb mwb--in">Marca reunião com Dr. Silva terça 14h e manda lembrete pra Mariana.<time>08:43</time></div>
+            <div class="mwb mwb--out mwb--lara">Feito ✓ Reunião agendada e lembrete enviado pra Mariana.<time>08:43</time></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== RESULTADO REAL — PROVA SOCIAL COM NÚMERO (placeholder até o beta) ===== -->
+<section class="section reveal-section" id="resultado">
+  <div class="prova-wrap">
+    <div class="prova-eyebrow">Resultado real</div>
+    <blockquote class="prova-quote">
+      "Desde que a Lara entrou, <em>não perdemos um único prazo</em> — e parei de acordar
+      com o WhatsApp lotado de cliente cobrando resposta."
+    </blockquote>
+    <div class="prova-author">
+      <div class="prova-author__avatar">GT</div>
+      <div>
+        <div class="prova-author__name">Dr. Guilherme Tessaro</div>
+        <div class="prova-author__role">Tessaro Advogados · Campo Grande/MS</div>
+      </div>
+    </div>
+    <div class="prova-metrics">
+      <div class="prova-metric">
+        <div class="prova-metric__num">0</div>
+        <div class="prova-metric__label">prazos perdidos no período</div>
+      </div>
+      <div class="prova-metric">
+        <div class="prova-metric__num">~10h</div>
+        <div class="prova-metric__label">economizadas por semana</div>
+      </div>
+      <div class="prova-metric">
+        <div class="prova-metric__num">100%</div>
+        <div class="prova-metric__label">das publicações lidas e classificadas</div>
+      </div>
+    </div>
+    <p class="prova-note">Números do escritório-piloto. Atualizados conforme o uso real.</p>
+  </div>
+</section>
+
+<!-- ===== VÍDEO DA PLATAFORMA ===== -->
+<section class="section reveal-section" id="plataforma">
+  <div class="plataforma">
+    <div class="plataforma__head">
+      <div class="plataforma__eyebrow">Por dentro</div>
+      <h2 class="plataforma__title">O seu escritório, <em>num só lugar.</em></h2>
+      <p class="plataforma__sub">Tudo que a Lara organiza aparece aqui — prazos, processos, conversas. Veja a plataforma funcionando.</p>
+    </div>
+    <div class="plataforma__frame">
+      <div class="plataforma__bar">
+        <span class="plataforma__dot"></span><span class="plataforma__dot"></span><span class="plataforma__dot"></span>
+        <span class="plataforma__url">app.nomoscan.com.br</span>
+      </div>
+      <div class="plataforma__screen">
+        <iframe class="plataforma__iframe" src="nomoscan-demo-embed.html" title="Demonstração da plataforma Nomoscan" loading="lazy"></iframe>
+      </div>
+    </div>
+    <p class="plataforma__nota">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      Esta é uma visão reduzida e ilustrativa do painel. A plataforma completa tem muito mais.
+    </p>
+  </div>
+</section>
+
+<!-- ===== COMPARAÇÃO DE CUSTO ===== -->
+<section class="section reveal-section" id="comparacao">
+  <div class="section-header">
+    <div class="eyebrow">O custo de não ter</div>
+    <h2 class="section__title">Quanto custa <em>um prazo perdido?</em></h2>
+    <p class="section__sub">
+      Não é só o que você paga pela ferramenta. É o que você arrisca sem ela.
+    </p>
+  </div>
+  <div class="comp-grid">
+    <div class="comp-card comp-card--sem">
+      <div class="comp-card__tag">Sem o Nomoscan</div>
+      <ul class="comp-list">
+        <li>Secretária dedicada a controlar prazos: <strong>~R$ 2.500/mês</strong></li>
+        <li>Um único prazo perdido: honorários devolvidos + indenização ao cliente</li>
+        <li>Processo ético na OAB e desgaste do nome</li>
+        <li>Horas em planilha que falha num dia corrido</li>
+      </ul>
+      <div class="comp-card__total">Risco anual estimado: <strong>R$ 44.412+</strong></div>
+    </div>
+    <div class="comp-card comp-card--com">
+      <div class="comp-card__tag comp-card__tag--ok">Com o Nomoscan</div>
+      <ul class="comp-list">
+        <li>A Lara lê 100% das publicações, sem falha humana</li>
+        <li>Prazos calculados e lançados na agenda automaticamente</li>
+        <li>Cliente atendido 24/7, sem você parar o que faz</li>
+        <li>Sem contratar gente só pra tarefa-meio</li>
+      </ul>
+      <div class="comp-card__total comp-card__total--ok">Uma fração do custo de uma equipe operacional.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FORMULÁRIO DE IMPLEMENTAÇÃO (substitui planos) ===== -->
+<section class="section reveal-section" id="implementar">
+  <div class="form-wrap">
+    <div class="form-intro">
+      <div class="eyebrow">Implementação assistida</div>
+      <h2 class="section__title">Vamos colocar a Lara <em>no seu escritório.</em></h2>
+      <p class="section__sub">
+        Cada escritório é configurado com a nossa equipe: conectamos seu WhatsApp, ajustamos
+        a Lara ao seu jeito de atender e deixamos tudo rodando. Preencha abaixo e falamos com
+        você.
+      </p>
+      <ul class="form-bullets">
+        <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Configuração feita com você, sem dor de cabeça técnica</li>
+        <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> A Lara ajustada ao seu jeito de atender</li>
+        <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Acompanhamento próximo nas primeiras semanas</li>
+      </ul>
+    </div>
+
+    <form class="form-card" id="form-implementar" onsubmit="return enviarFormulario(event)">
+      <div class="form-row">
+        <div class="form-field">
+          <label for="f-nome">Nome*</label>
+          <input type="text" id="f-nome" name="nome" required>
+        </div>
+        <div class="form-field">
+          <label for="f-sobrenome">Sobrenome*</label>
+          <input type="text" id="f-sobrenome" name="sobrenome" required>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label for="f-email">E-mail*</label>
+          <input type="email" id="f-email" name="email" required>
+        </div>
+        <div class="form-field">
+          <label for="f-whats">WhatsApp*</label>
+          <input type="tel" id="f-whats" name="whatsapp" placeholder="(67) 9 9999-9999" required>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label for="f-escritorio">Escritório / Banca*</label>
+          <input type="text" id="f-escritorio" name="escritorio" required>
+        </div>
+        <div class="form-field">
+          <label for="f-oab">OAB (opcional)</label>
+          <input type="text" id="f-oab" name="oab" placeholder="OAB/MS 00000">
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label for="f-tamanho">Quantas pessoas no escritório?*</label>
+        <select id="f-tamanho" name="tamanho" required>
+          <option value="">Selecione</option>
+          <option>Só eu</option>
+          <option>2 a 5</option>
+          <option>6 a 15</option>
+          <option>16 a 50</option>
+          <option>Mais de 50</option>
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label for="f-area">Principal área de atuação*</label>
+        <select id="f-area" name="area" required>
+          <option value="">Selecione</option>
+          <option>Cível</option>
+          <option>Trabalhista</option>
+          <option>Previdenciário</option>
+          <option>Família e Sucessões</option>
+          <option>Criminal</option>
+          <option>Tributário</option>
+          <option>Empresarial</option>
+          <option>Múltiplas áreas</option>
+          <option>Outra</option>
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label for="f-decisao">Quem decide a contratação?*</label>
+        <select id="f-decisao" name="decisao" required>
+          <option value="">Selecione</option>
+          <option>Eu sou o decisor final</option>
+          <option>Faço parte da decisão</option>
+          <option>Preciso da aprovação de um sócio</option>
+          <option>Só estou conhecendo</option>
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label for="f-prazo">Quando pretende implementar?*</label>
+        <select id="f-prazo" name="prazo" required>
+          <option value="">Selecione</option>
+          <option>O quanto antes</option>
+          <option>Nas próximas 4 semanas</option>
+          <option>Nos próximos 3 meses</option>
+          <option>Só pesquisando por enquanto</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn form-submit">
+        Quero implementar a Lara
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+      <p class="form-disclaimer">Sem compromisso. Respondemos em até 1 dia útil pelo WhatsApp.</p>
+    </form>
+  </div>
+</section>
+
+<!-- ===== FAQ ===== -->
+<section class="section reveal-section" id="faq">
+  <div class="section-header">
+    <div class="eyebrow">Perguntas frequentes</div>
+    <h2 class="section__title">Você ia perguntar <em>isso</em>.</h2>
+  </div>
+
+  <div class="faq">
+    <details class="faq-item">
+      <summary>A Lara substitui a minha secretária física?</summary>
+      <p>Depende do escritório. Pra muitos solos, sim — a Lara cobre atendimento, agendamento, qualificação de lead e organização de agenda. Pra escritórios maiores, ela complementa: deixa a secretária física livre pra tarefas mais estratégicas e absorve toda a parte repetitiva (responder "como está meu processo", marcar reunião, lembrar prazo).</p>
+    </details>
+    <details class="faq-item">
+      <summary>Como ela atende meus clientes? Usa meu número?</summary>
+      <p>Sim. Você conecta o WhatsApp Business do escritório à Lara (via QR Code, em 30 segundos). Ela atende pelo seu número, com a sua identidade, e o cliente nem precisa saber que está falando com IA — embora a gente recomende deixar isso transparente quando perguntado.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Eu preciso configurar muita coisa?</summary>
+      <p>Não. A Lara já vem com prompts treinados pro contexto jurídico brasileiro. Você só precisa preencher 3 coisas: o nome do escritório, sua área de atuação (cível, trabalhista, etc.), e o que ela deve escalar pra você. Depois disso, ela funciona — e fica melhor à medida que aprende seu jeito.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Ela pode atender em outras línguas?</summary>
+      <p>Por padrão, português brasileiro. Mas se um cliente escrever em outra língua, ela responde no mesmo idioma. Útil pra escritórios com clientes estrangeiros (Mercosul, expats).</p>
+    </details>
+    <details class="faq-item">
+      <summary>Meus dados estão seguros? E os dos meus clientes?</summary>
+      <p>Sim. Cada escritório tem isolamento de dados via Row Level Security no banco, criptografia em repouso e em trânsito. Estamos conformes com LGPD e atendemos ao código de ética da OAB sobre sigilo profissional. Nenhum dado é usado pra treinar IA externa.</p>
+    </details>
+    <details class="faq-item">
+      <summary>E se a Lara errar algo? Como ela escala pra mim?</summary>
+      <p>Sempre que ela detecta dúvida técnica, decisão estratégica, ou cliente irritado/confuso, ela escala automaticamente pra você. Você vê uma notificação no painel ou no WhatsApp dizendo "Lara escalou conversa de X — requer sua atenção". Ela nunca toma decisão jurídica sozinha.</p>
+    </details>
+    <details class="faq-item">
+      <summary>O que acontece se eu passar do limite de mensagens?</summary>
+      <p>A Lara não para — você continua atendendo normalmente. Mensagens excedentes são cobradas a <strong>R$ 0,15 cada</strong> no fim do mês, mas só se você estourar o plano de forma consistente: a gente te avisa antes de fechar a fatura. Você também pode subir de plano a qualquer momento e voltar no mês seguinte, sem multa. Nada de surpresa.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Como funciona pra começar?</summary>
+      <p>É simples: você agenda uma demonstração e mostramos a Lara funcionando — atendendo no WhatsApp, lendo suas publicações e gerando prazos. Se fizer sentido pro seu escritório, configuramos tudo e ativamos em poucos dias. Sem letra miúda.</p>
+    </details>
+  </div>
+</section>
+
+<!-- ===== CTA FINAL ===== -->
+<section class="final-cta">
+  <div class="final-cta__inner">
+    <h2 class="final-cta__title">
+      Conheça a Lara em <em>30 segundos</em>.
+    </h2>
+    <p class="final-cta__sub">
+      Mande um "oi" no nosso WhatsApp — você vai ver na prática o que ela faz pelo seu escritório.
+    </p>
+    <div class="final-cta__group">
+      <a href="#implementar" class="btn">
+        Implementar a Lara
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+      <a href="https://wa.me/5567991613715?text=Ol%C3%A1!%20Gostaria%20de%20agendar%20uma%20demonstra%C3%A7%C3%A3o%20do%20Nomoscan." class="btn btn--ghost">
+        Agendar demonstração
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <div class="footer__top">
+    <div class="footer__brand-block">
+      <div class="brand">Nomoscan<span class="brand__dot"></span></div>
+      <p class="footer__tagline">
+        A secretária do seu escritório, em IA. Atende, qualifica, monitora, executa. Feito em Campo Grande, MS.
+      </p>
+    </div>
+    <div class="footer__col">
+      <h4>Produto</h4>
+      <ul>
+        <li><a href="#acao">Veja em ação</a></li>
+        <li><a href="#implementar">Implementação</a></li>
+        <li><a href="#changelog">Novidades</a></li>
+      </ul>
+    </div>
+    <div class="footer__col">
+      <h4>Empresa</h4>
+      <ul>
+        <li><a href="#sobre">Sobre</a></li>
+        <li><a href="#blog">Blog</a></li>
+        <li><a href="#carreiras">Carreiras</a></li>
+        <li><a href="#contato">Contato</a></li>
+      </ul>
+    </div>
+    <div class="footer__col">
+      <h4>Suporte</h4>
+      <ul>
+        <li><a href="#docs">Documentação</a></li>
+        <li><a href="#status">Status</a></li>
+        <li><a href="#privacidade">Privacidade · LGPD</a></li>
+        <li><a href="#termos">Termos de uso</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer__bottom">
+    <span>© 2026 Nomoscan · Todos os direitos reservados</span>
+    <span>CNPJ XX.XXX.XXX/0001-XX · Campo Grande, MS</span>
+  </div>
+</footer>
+
+<script>
+  // ===== Reveal on scroll =====
+  function revealAll() {
+    document.querySelectorAll('.reveal-section').forEach(el => el.classList.add('is-visible'));
+  }
+  if ('IntersectionObserver' in window) {
+    try {
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            e.target.classList.add('is-visible');
+            io.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+      document.querySelectorAll('.reveal-section').forEach(el => io.observe(el));
+      setTimeout(revealAll, 1500);
+    } catch (err) {
+      revealAll();
+    }
+  } else {
+    revealAll();
+  }
+
+  // ===== Esteira do fluxo: passos se acendem em sequência ao entrar na tela =====
+  (function () {
+    const flow = document.querySelector('.flow');
+    if (!flow) return;
+    const passos = Array.from(flow.querySelectorAll('.flow__step'));
+    if (!passos.length) return;
+
+    function acender() {
+      flow.classList.add('is-running');
+      passos.forEach((p, i) => {
+        setTimeout(() => p.classList.add('lit'), i * 380);
+      });
+    }
+
+    if ('IntersectionObserver' in window) {
+      try {
+        const ioFlow = new IntersectionObserver((entries) => {
+          entries.forEach(e => {
+            if (e.isIntersecting) {
+              acender();
+              ioFlow.unobserve(e.target);
+            }
+          });
+        }, { threshold: 0.25 });
+        ioFlow.observe(flow);
+        // fallback: se em 2s não disparou (seção já visível no load), acende mesmo assim
+        setTimeout(acender, 2000);
+      } catch (err) {
+        acender();
+      }
+    } else {
+      acender();
+    }
+  })();
+</script>
+
+
+<script>
+(function(){
+  const cards=document.querySelectorAll('.vitrine__card');
+  const frames={wa:document.getElementById('vf-wa'),painel:document.getElementById('vf-painel')};
+  const urlEl=document.getElementById('vitrineUrl');
+  if(!cards.length||!frames.wa)return;
+  function ativar(key){
+    cards.forEach(c=>{const on=c.dataset.target===key;c.classList.toggle('active',on);c.setAttribute('aria-pressed',on?'true':'false');if(on)urlEl.textContent=c.dataset.url;});
+    Object.keys(frames).forEach(k=>{
+      const f=frames[k];
+      if(k===key){
+        // carrega o src só na primeira vez que ativa (lazy) e reinicia a animação
+        if(!f.src && f.dataset.src){f.src=f.dataset.src;}
+        else if(f.src){f.src=f.src;} // recarrega pra tocar do início
+        f.classList.add('active');
+      } else {
+        f.classList.remove('active');
+      }
+    });
+  }
+  cards.forEach(c=>c.addEventListener('click',()=>ativar(c.dataset.target)));
+})();
+</script>
+
+<script>
+function enviarFormulario(e){
+  e.preventDefault();
+  var f = e.target;
+  var v = function(n){ var el = f.elements[n]; return el ? el.value.trim() : ''; };
+  var msg = "*Nova solicitação de implementação — Nomoscan*\n\n"
+    + "Nome: " + v('nome') + " " + v('sobrenome') + "\n"
+    + "E-mail: " + v('email') + "\n"
+    + "WhatsApp: " + v('whatsapp') + "\n"
+    + "Escritório: " + v('escritorio') + "\n"
+    + "OAB: " + (v('oab') || "—") + "\n"
+    + "Tamanho: " + v('tamanho') + "\n"
+    + "Área: " + v('area') + "\n"
+    + "Decisão: " + v('decisao') + "\n"
+    + "Prazo: " + v('prazo');
+  var url = "https://wa.me/5567991613715?text=" + encodeURIComponent(msg);
+
+  var wrap = f.closest('.form-wrap');
+  if (wrap) {
+    wrap.innerHTML = '<div class="form-success" style="grid-column:1/-1;">'
+      + '<h3>Recebemos seu pedido!</h3>'
+      + '<p>Estamos abrindo o WhatsApp pra você confirmar. Se não abrir automaticamente, '
+      + '<a href="' + url + '" style="color:var(--salvia-300);text-decoration:underline;">toque aqui</a>.</p>'
+      + '</div>';
+  }
+  window.open(url, '_blank');
+  return false;
+}
+</script>
+<script>
+(function(){
+  const stage=document.getElementById('manifesto-stage');
+  const core=document.getElementById('manifesto-core');
+  const counter=document.getElementById('manifesto-counter');
+  if(!stage||!core)return;
+  const tarefas=['Conferir as publicações','Calcular o prazo','Lançar na agenda','Delegar pro advogado','Avisar o cliente','Responder "como está meu processo?"','Remarcar reunião','Organizar a semana'];
+  let n=0, rodando=false, intervalo=null;
+  function solta(){
+    const cx=stage.offsetWidth/2, cy=stage.offsetHeight/2 - 10;
+    const txt=tarefas[Math.floor(Math.random()*tarefas.length)];
+    const el=document.createElement('div');
+    el.className='manifesto__task';
+    const ang=Math.random()*Math.PI*2;
+    // raio adaptado: em telas estreitas, distância menor pra tarefa não vazar
+    const estreito = stage.offsetWidth < 480;
+    const dist = estreito ? Math.min(cx * 0.55, 95) : Math.min(cx, 180);
+    let sx=cx+Math.cos(ang)*dist, sy=cy+Math.sin(ang)*dist*0.78;
+    // clamp: garante que o balão (~85px de meia-largura) fique dentro do palco
+    const margem = 90;
+    sx = Math.max(margem, Math.min(stage.offsetWidth - margem, sx));
+    sy = Math.max(30, Math.min(stage.offsetHeight - 30, sy));
+    el.textContent=txt;
+    el.style.left=sx+'px'; el.style.top=sy+'px';
+    stage.appendChild(el);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      el.style.opacity='1';
+      setTimeout(()=>{
+        el.style.left=cx+'px'; el.style.top=cy+'px'; el.style.opacity='0';
+        el.style.transform='translate(-50%,-50%) scale(0.4)';
+        core.style.transform='translate(-50%,-50%) scale(1.08)';
+        setTimeout(()=>core.style.transform='translate(-50%,-50%) scale(1)',200);
+        n++; counter.textContent=n+(n===1?' tarefa absorvida hoje':' tarefas absorvidas hoje');
+      },700);
+    }));
+    setTimeout(()=>el.remove(),2400);
+  }
+  function start(){ if(rodando)return; rodando=true; solta(); intervalo=setInterval(solta,1400); }
+  if('IntersectionObserver' in window){
+    const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){start();io.unobserve(e.target);}});},{threshold:0.3});
+    io.observe(stage);
+    setTimeout(start,2500);
+  } else { start(); }
+})();
+</script>
+</body>
+</html>
